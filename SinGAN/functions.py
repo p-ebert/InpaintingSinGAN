@@ -257,6 +257,8 @@ def generate_dir2save(opt):
     dir2save = None
     if (opt.mode == 'train') | (opt.mode == 'SR_train'):
         dir2save = 'TrainedModels/%s/scale_factor=%f,alpha=%d' % (opt.input_name[:-4], opt.scale_factor_init,opt.alpha)
+        if opt.on_drive!=None:
+            dir2save="{}/TrainedModels/{}/scale_factor={},alpha={}".format(opt.on_drive, opt.input_name[:-4], opt.scale_factor, opt.alpha)
     elif (opt.mode == 'animation_train') :
         dir2save = 'TrainedModels/%s/scale_factor=%f_noise_padding' % (opt.input_name[:-4], opt.scale_factor_init)
     elif (opt.mode == 'paint_train') :
@@ -271,6 +273,8 @@ def generate_dir2save(opt):
         dir2save = '%s/SR/%s' % (opt.out, opt.sr_factor)
     elif opt.mode == 'harmonization':
         dir2save = '%s/Harmonization/%s/%s_out' % (opt.out, opt.input_name[:-4],opt.ref_name[:-4])
+        if opt.on_drive!=None:
+            dir2save="{}/TrainedModels/Harmonization/{}/{}".format(opt.on_drive, opt.input_name[:-4],opt.ref_name[:-4])
     elif opt.mode == 'editing':
         dir2save = '%s/Editing/%s/%s_out' % (opt.out, opt.input_name[:-4],opt.ref_name[:-4])
     elif opt.mode == 'paint2image':
@@ -288,6 +292,9 @@ def post_config(opt):
     opt.min_nfc_init = opt.min_nfc
     opt.scale_factor_init = opt.scale_factor
     opt.out_ = 'TrainedModels/%s/scale_factor=%f/' % (opt.input_name[:-4], opt.scale_factor)
+    if opt.on_drive != None:
+        opt.out_="{}/TrainedModels/{}/scale_factor={}/".format(opt.on_drive, opt.input_name[:-4], opt.scale_factor)
+    
     if opt.mode == 'SR':
         opt.alpha = 100
 

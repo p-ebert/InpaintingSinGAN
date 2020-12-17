@@ -14,6 +14,7 @@ if __name__ == '__main__':
     parser.add_argument('--ref_name', help='reference image name', required=True)
     parser.add_argument('--harmonization_start_scale', help='harmonization injection scale', type=int, required=True)
     parser.add_argument('--mode', help='task to be done', default='harmonization')
+    parser.add_argument('--on_drive', help='using drive or not', default=None)
     opt = parser.parse_args()
     opt = functions.post_config(opt)
     Gs = []
@@ -21,6 +22,7 @@ if __name__ == '__main__':
     reals = []
     NoiseAmp = []
     dir2save = functions.generate_dir2save(opt)
+
     if dir2save is None:
         print('task does not exist')
     #elif (os.path.exists(dir2save)):
@@ -54,7 +56,3 @@ if __name__ == '__main__':
             out = SinGAN_generate(Gs[n:], Zs[n:], reals, NoiseAmp[n:], opt, in_s, n=n, num_samples=1)
             out = (1-mask)*real+mask*out
             plt.imsave('%s/start_scale=%d.png' % (dir2save,opt.harmonization_start_scale), functions.convert_image_np(out.detach()), vmin=0, vmax=1)
-
-
-
-
