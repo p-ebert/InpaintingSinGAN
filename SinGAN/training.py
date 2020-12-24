@@ -7,6 +7,8 @@ import torch.utils.data
 import math
 import matplotlib.pyplot as plt
 from SinGAN.imresize import imresize
+from skimage import io as img
+import numpy as np
 
 def train(opt,Gs,Zs,reals,NoiseAmp):
     real_ = functions.read_image(opt)
@@ -15,6 +17,22 @@ def train(opt,Gs,Zs,reals,NoiseAmp):
     real = imresize(real_,opt.scale1,opt)
     reals = functions.creat_reals_pyramid(real,reals,opt)
     nfc_prev = 0
+
+    #If training for inpainting
+    if opt.mode=="inpainting":
+        #Importing mask image in space [0,255]
+        mask=img.imread('%s/%s' % (opt.input_dir,opt.mask_name))
+        #Convert mask to [O,1] space, 0 is masked out area, 1 everywhere else
+        mask=1-(mask/255)
+        #Loading mask to torch tensor
+        mask=torch.from_numpy(mask)
+
+        #Resizing the initial mask
+        mask=mask[:,:,:,None].view([1,3,mask.shape[0],mask.shape[1]])
+        mask=imresize(mask, opt.scale1, opt)
+
+        #Creating mask pyramid
+        opt.masks=functions.creat_reals_pyramid(mask,[],opt)
 
     while scale_num<opt.stop_scale+1:
         opt.nfc = min(opt.nfc_init * pow(2, math.floor(scale_num / 4)), 128)
@@ -62,6 +80,13 @@ def train(opt,Gs,Zs,reals,NoiseAmp):
 def train_single_scale(netD,netG,reals,Gs,Zs,in_s,NoiseAmp,opt,centers=None):
 
     real = reals[len(Gs)]
+
+    if opt.mode=="inpainting":
+        #Applying mask to current real Image
+        real= reals[len(Gs)]
+        mask=opt.masks[len(Gs)]
+        real=real*mask
+
     opt.nzx = real.shape[2]#+(opt.ker_size-1)*(opt.num_layer)
     opt.nzy = real.shape[3]#+(opt.ker_size-1)*(opt.num_layer)
     opt.receptive_field = opt.ker_size + ((opt.ker_size-1)*(opt.num_layer-1))*opt.stride
@@ -153,6 +178,9 @@ def train_single_scale(netD,netG,reals,Gs,Zs,in_s,NoiseAmp,opt,centers=None):
                 noise = opt.noise_amp*noise_+prev
 
             fake = netG(noise.detach(),prev)
+
+            if opt.mode=="inpainting":
+                fake=fake*mask
             output = netD(fake.detach())
             errD_fake = output.mean()
             errD_fake.backward(retain_graph=True)
@@ -182,7 +210,10 @@ def train_single_scale(netD,netG,reals,Gs,Zs,in_s,NoiseAmp,opt,centers=None):
                     z_prev = functions.quant2centers(z_prev, centers)
                     plt.imsave('%s/z_prev.png' % (opt.outf), functions.convert_image_np(z_prev), vmin=0, vmax=1)
                 Z_opt = opt.noise_amp*z_opt+z_prev
-                rec_loss = alpha*loss(netG(Z_opt.detach(),z_prev),real)
+                gen=netG(Z_opt.detach(),z_prev)
+                if opt.mode=="inpainting":
+                    gen=mask*gen
+                rec_loss = alpha*loss(gen,real)
                 rec_loss.backward(retain_graph=True)
                 rec_loss = rec_loss.detach()
             else:
@@ -214,7 +245,7 @@ def train_single_scale(netD,netG,reals,Gs,Zs,in_s,NoiseAmp,opt,centers=None):
         schedulerG.step()
 
     functions.save_networks(netG,netD,z_opt,opt)
-    return z_opt,in_s,netG    
+    return z_opt,in_s,netG
 
 def draw_concat(Gs,Zs,reals,NoiseAmp,in_s,mode,m_noise,m_image,opt):
     G_z = in_s

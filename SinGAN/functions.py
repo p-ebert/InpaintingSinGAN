@@ -17,9 +17,9 @@ from sklearn.cluster import KMeans
 
 # custom weights initialization called on netG and netD
 
-def read_image(opt):
-    x = img.imread('%s%s' % (opt.input_img,opt.ref_image))
-    return np2torch(x)
+#def read_image(opt):
+#    x = img.imread('%s%s' % (opt.input_img,opt.ref_image))
+#    return np2torch(x)
 
 def denorm(x):
     out = (x + 1) / 2
@@ -148,6 +148,8 @@ def calc_gradient_penalty(netD, real_data, fake_data, LAMBDA, device):
 
 def read_image(opt):
     x = img.imread('%s/%s' % (opt.input_dir,opt.input_name))
+    #if opt.mode =="inpainting":
+    #    x=img.imread("{}/{}".format(opt.input_dir, opt.input_name))
     x = np2torch(x,opt)
     x = x[:,0:3,:,:]
     return x
@@ -233,12 +235,16 @@ def load_trained_pyramid(opt, mode_='train'):
     opt.mode = 'train'
     if (mode == 'animation_train') | (mode == 'SR_train') | (mode == 'paint_train'):
         opt.mode = mode
+
+    if mode=="inpainting_generate":
+        opt.mode="inpainting"
+
     dir = generate_dir2save(opt)
     if(os.path.exists(dir)):
-        Gs = torch.load('%s/Gs.pth' % dir)
-        Zs = torch.load('%s/Zs.pth' % dir)
-        reals = torch.load('%s/reals.pth' % dir)
-        NoiseAmp = torch.load('%s/NoiseAmp.pth' % dir)
+        Gs = torch.load('%s/Gs.pth' % dir,map_location=torch.device(opt.device))
+        Zs = torch.load('%s/Zs.pth' % dir,map_location=torch.device(opt.device))
+        reals = torch.load('%s/reals.pth' % dir,map_location=torch.device(opt.device))
+        NoiseAmp = torch.load('%s/NoiseAmp.pth' % dir,map_location=torch.device(opt.device))
     else:
         print('no appropriate trained model is exist, please train first')
     opt.mode = mode
@@ -281,6 +287,18 @@ def generate_dir2save(opt):
         dir2save = '%s/Paint2image/%s/%s_out' % (opt.out, opt.input_name[:-4],opt.ref_name[:-4])
         if opt.quantization_flag:
             dir2save = '%s_quantized' % dir2save
+
+    elif opt.mode == "inpainting":
+        dir2save= "TrainedModels/%s_inpainting/%s" % (opt.input_name[:-4], opt.mask_name[:-4])
+        if opt.on_drive!=None:
+            dir2save="{}/TrainedModels/{}_inpainting/{}".format(opt.on_drive, opt.input_name[:-4],opt.mask_name[:-4])
+
+    elif opt.mode == "inpainting_generate":
+        dir2save= "%s/Inpainting/%s_%s" % (opt.out, opt.input_name[:-4], opt.mask_name[:-4])
+        if opt.on_drive!=None:
+            dir2save="{}/Inpainting/{}_{}".format(opt.on_drive, opt.input_name[:-4],opt.mask_name[:-4])
+
+
     return dir2save
 
 def post_config(opt):
@@ -294,7 +312,7 @@ def post_config(opt):
     opt.out_ = 'TrainedModels/%s/scale_factor=%f/' % (opt.input_name[:-4], opt.scale_factor)
     if opt.on_drive != None:
         opt.out_="{}/TrainedModels/{}/scale_factor={}/".format(opt.on_drive, opt.input_name[:-4], opt.scale_factor)
-    
+
     if opt.mode == 'SR':
         opt.alpha = 100
 
@@ -347,6 +365,9 @@ def dilate_mask(mask,opt):
         element = morphology.disk(radius=7)
     if opt.mode == "editing":
         element = morphology.disk(radius=20)
+    if opt.mode == "inpainting_generate":
+        element = morphology.disk(opt.radius)
+    print(element)
     mask = torch2uint8(mask)
     mask = mask[:,:,0]
     mask = morphology.binary_dilation(mask,selem=element)
@@ -356,8 +377,7 @@ def dilate_mask(mask,opt):
     mask = np2torch(mask,opt)
     opt.nc_im = nc_im
     mask = mask.expand(1, 3, mask.shape[2], mask.shape[3])
-    plt.imsave('%s/%s_mask_dilated.png' % (opt.ref_dir, opt.ref_name[:-4]), convert_image_np(mask), vmin=0,vmax=1)
+
+    #plt.imsave('%s/%s_mask_dilated.png' % (dir2save, opt.mask_name[:-4]), convert_image_np(mask), vmin=0,vmax=1)
     mask = (mask-mask.min())/(mask.max()-mask.min())
     return mask
-
-

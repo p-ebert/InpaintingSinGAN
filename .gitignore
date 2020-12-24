@@ -4,3 +4,4 @@ TrainedModels/
 __pycache__/
 .idea
 singan_env/
+SINGANenv/
