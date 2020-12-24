@@ -3,14 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
-img = Image.open("./Input/Inpainting/nature.jpg")
-img.show()
-img=np.array(img)
+img = Image.open("./Segmented_image/mountain.jpg")
 
-x1=125
-x2=140
-y1=80
-y2=95
+img=np.array(img)
+x1=105
+x2=165
+y1=235
+y2=260
 mask=img.copy()
 mask[x1:x2,y1:y2,:]=[255,255,255]
 mask[:x1,:,:]=[0,0,0]
@@ -18,11 +17,8 @@ mask[:,:y1,:]=[0,0,0]
 mask[:,y2:,:]=[0,0,0]
 mask[x2:,:,:]=[0,0,0]
 
-plt.imshow(mask*img)
-plt.show()
-cv2.imwrite("./Input/Inpainting/nature_mask.jpg",mask)
+cv2.imwrite("./Segmented_image/mountain_mask.jpg",mask)
 
-#In[]:
 
 #Image.fromarray(mask).save("./Segmented_image/mountain_mask.jpg")
 """

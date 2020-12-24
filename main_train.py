@@ -2,7 +2,6 @@ from config import get_arguments
 from SinGAN.manipulate import *
 from SinGAN.training import *
 import SinGAN.functions as functions
-import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
@@ -11,7 +10,6 @@ if __name__ == '__main__':
     parser.add_argument('--input_name', help='input image name', required=True)
     parser.add_argument('--mode', help='task to be done', default='train')
     parser.add_argument('--on_drive', help='using drive or not', default=None)
-    parser.add_argument('--mask_name', help='name of mask image', default=None)
     opt = parser.parse_args()
     opt = functions.post_config(opt)
     Gs = []
@@ -19,6 +17,7 @@ if __name__ == '__main__':
     reals = []
     NoiseAmp = []
     dir2save = functions.generate_dir2save(opt)
+
 
     try:
         os.makedirs(dir2save)

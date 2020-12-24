@@ -1,6 +1,30 @@
 # SinGAN
+To train for inpainting: run main_train.py --mode inpainting
+--input_dir dir name of file where input images are stored
+--input_name name of file to inpaint
+--mode inpainting
+--on_drive  path to folder in google drive (leave blank if on local computer)
 
-[Project](https://tamarott.github.io/SinGAN.htm) | [Arxiv](https://arxiv.org/pdf/1905.01164.pdf) | [CVF](http://openaccess.thecvf.com/content_ICCV_2019/papers/Shaham_SinGAN_Learning_a_Generative_Model_From_a_Single_Natural_Image_ICCV_2019_paper.pdf) 
+To actually inpaint: run inpainting.py
+--input_dir name of file where input images are stored
+--input_name name of file to inpaint
+--on_drive path to folder in google drive (leave blank if on local computer)
+--mask_name name of the mask used to select the inpainting zone
+--inpainting_scale_start (default=1)
+--radius (default=7)
+
+Requires cv2 (not present in original singan requirements)
+
+Potential problems: detection of the masks position
+
+Next steps:
+
+1. Test this version
+2. Talk with our supervisor
+3. Look at more intricate mask filling methods (see colour_fill.py)
+4. Investigate edge-connect
+
+[Project](https://tamarott.github.io/SinGAN.htm) | [Arxiv](https://arxiv.org/pdf/1905.01164.pdf) | [CVF](http://openaccess.thecvf.com/content_ICCV_2019/papers/Shaham_SinGAN_Learning_a_Generative_Model_From_a_Single_Natural_Image_ICCV_2019_paper.pdf)
 ### Official pytorch implementation of the paper: "SinGAN: Learning a Generative Model from a Single Natural Image", ICCV 2019 Best paper award (Marr prize)
 
 
@@ -50,16 +74,16 @@ This will also use the resulting trained model to generate random samples starti
 To run this code on a cpu machine, specify `--not_cuda` when calling `main_train.py`
 
 ###  Random samples
-To generate random samples from any starting generation scale, please first train SinGAN model for the desire image (as described above), then run 
+To generate random samples from any starting generation scale, please first train SinGAN model for the desire image (as described above), then run
 
 ```
 python random_samples.py --input_name <training_image_file_name> --mode random_samples --gen_start_scale <generation start scale number>
 ```
 
-pay attention: for using the full model, specify the generation start scale to be 0, to start the generation from the second scale, specify it to be 1, and so on. 
+pay attention: for using the full model, specify the generation start scale to be 0, to start the generation from the second scale, specify it to be 1, and so on.
 
 ###  Random samples of arbitrery sizes
-To generate random samples of arbitrery sizes, please first train SinGAN model for the desire image (as described above), then run 
+To generate random samples of arbitrery sizes, please first train SinGAN model for the desire image (as described above), then run
 
 ```
 python random_samples.py --input_name <training_image_file_name> --mode random_samples_arbitrary_sizes --scale_h <horizontal scaling factor> --scale_v <vertical scaling factor>
@@ -70,7 +94,7 @@ python random_samples.py --input_name <training_image_file_name> --mode random_s
 To generate short animation from a single image, run
 
 ```
-python animation.py --input_name <input_file_name> 
+python animation.py --input_name <input_file_name>
 ```
 
 This will automatically start a new training phase with noise padding mode.
@@ -84,7 +108,7 @@ python harmonization.py --input_name <training_image_file_name> --ref_name <naiv
 
 ```
 
-Please note that different injection scale will produce different harmonization effects. The coarsest injection scale equals 1. 
+Please note that different injection scale will produce different harmonization effects. The coarsest injection scale equals 1.
 
 ###  Editing
 
@@ -95,7 +119,7 @@ python editing.py --input_name <training_image_file_name> --ref_name <edited_ima
 
 ```
 both the masked and unmasked output will be saved.
-Here as well, different injection scale will produce different editing effects. The coarsest injection scale equals 1. 
+Here as well, different injection scale will produce different editing effects. The coarsest injection scale equals 1.
 
 ###  Paint to Image
 
@@ -105,7 +129,7 @@ To transfer a paint into a realistic image (See example in Fig. 11 in [our paper
 python paint2image.py --input_name <training_image_file_name> --ref_name <paint_image_file_name> --paint_start_scale <scale to inject>
 
 ```
-Here as well, different injection scale will produce different editing effects. The coarsest injection scale equals 1. 
+Here as well, different injection scale will produce different editing effects. The coarsest injection scale equals 1.
 
 Advanced option: Specify quantization_flag to be True, to re-train *only* the injection level of the model, to get a on a color-quantized version of upsamled generated images from previous scale. For some images, this might lead to more realistic results.
 
@@ -123,7 +147,7 @@ SinGAN's results on BSD100 dataset can be download from the 'Downloads' folder.
 ### Single Image Fréchet Inception Distance (SIFID score)
 To calculate the SIFID between real images and their corresponding fake samples, please run:
 ```
-python SIFID/sifid_score.py --path2real <real images path> --path2fake <fake images path> 
+python SIFID/sifid_score.py --path2real <real images path> --path2fake <fake images path>
 ```  
 Make sure that each of the fake images file name is identical to its cooresponding real image file name. Images should be saved in `.jpg` format.
 
@@ -131,14 +155,12 @@ Make sure that each of the fake images file name is identical to its coorespondi
 SinGAN's SR results on BSD100 dataset can be download from the 'Downloads' folder.
 
 ### User Study
-The data used for the user study can be found in the Downloads folder. 
+The data used for the user study can be found in the Downloads folder.
 
 real folder: 50 real images, randomly picked from the [places databas](http://places.csail.mit.edu/)
 
-fake_high_variance folder: random samples starting from n=N for each of the real images 
+fake_high_variance folder: random samples starting from n=N for each of the real images
 
-fake_mid_variance folder: random samples starting from n=N-1 for each of the real images 
+fake_mid_variance folder: random samples starting from n=N-1 for each of the real images
 
 For additional details please see section 3.1 in our [paper](https://arxiv.org/pdf/1905.01164.pdf)
-
-
