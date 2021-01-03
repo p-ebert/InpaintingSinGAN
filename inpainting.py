@@ -26,7 +26,6 @@ if __name__=="__main__":
     reals = []
     NoiseAmp = []
     dir2save = functions.generate_dir2save(opt)
-
     if dir2save is None:
         print('task does not exist')
     #elif (os.path.exists(dir2save)):
@@ -50,27 +49,31 @@ if __name__=="__main__":
             else:
                 masked_img = cv2.imread('%s/%s' % (opt.input_dir, opt.input_name))
                 masked_img = cv2.cvtColor(masked_img, cv2.COLOR_BGR2RGB)
-
+            
             #Importing mask
             if opt.on_drive!=None:
                 mask = cv2.imread('%s/%s/%s' % (opt.on_drive, opt.input_dir, opt.mask_name))
             else:
                 mask = cv2.imread('%s/%s' % (opt.input_dir, opt.mask_name))
-
+            
             #Converting to binary mask
             mask=1-mask/255
 
             coloured_image=colour_fill.mean_colour_rectangular(masked_img, mask)
+            print(coloured_image.shape)
+            print(np.max(coloured_image))
+            plt.imshow(coloured_image)
+            plt.show()
 
             #writing coloured img
             if opt.on_drive!=None:
-                cv2.imwrite("%s/%s/%s_coloured.jpg" % (opt.on_drive, dir2save, opt.mask_name[:-4]),coloured_image)
+                cv2.imwrite("%s/%s_coloured.jpg" % (dir2save, opt.mask_name[:-4]),coloured_image)
             else:
                 cv2.imwrite("%s/%s_coloured.jpg" % (dir2save, opt.mask_name[:-4]), coloured_image)
-
+            
             #Reading in coloured image
             if opt.on_drive!=None:
-                ref = functions.read_image_dir('%s/%s/%s_coloured.jpg' % (opt.on_drive, dir2save, opt.mask[:-4]), opt)
+                ref = functions.read_image_dir('%s/%s_coloured.jpg' % (dir2save, opt.mask_name[:-4]), opt)
                 mask = functions.read_image_dir('%s/%s/%s' % (opt.on_drive, opt.input_dir,opt.mask_name), opt)
 
             else:
@@ -103,3 +106,4 @@ if __name__=="__main__":
             out = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)*255
 
             cv2.imwrite('%s/%s_start_scale=%d.jpg' % (dir2save,opt.input_name[:-4],opt.inpainting_scale_start), out)
+            

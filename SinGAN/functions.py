@@ -13,6 +13,7 @@ from SinGAN.imresize import imresize
 import os
 import random
 from sklearn.cluster import KMeans
+import cv2 as cv
 
 
 # custom weights initialization called on netG and netD
@@ -147,7 +148,11 @@ def calc_gradient_penalty(netD, real_data, fake_data, LAMBDA, device):
     return gradient_penalty
 
 def read_image(opt):
-    x = img.imread('%s/%s' % (opt.input_dir,opt.input_name))
+    #x = img.imread('%s/%s' % (opt.input_dir,opt.input_name))
+    if opt.on_drive!=None:
+        x=cv.imread('%s/%s/%s' % (opt.on_drive, opt.input_dir,opt.input_name))
+    else:
+        x=cv.imread('%s/%s' % (opt.input_dir,opt.input_name))
     #if opt.mode =="inpainting":
     #    x=img.imread("{}/{}".format(opt.input_dir, opt.input_name))
     x = np2torch(x,opt)
@@ -155,6 +160,7 @@ def read_image(opt):
     return x
 
 def read_image_dir(dir,opt):
+    print(dir)
     x = img.imread('%s' % (dir))
     x = np2torch(x,opt)
     x = x[:,0:3,:,:]
@@ -260,6 +266,7 @@ def generate_in2coarsest(reals,scale_v,scale_h,opt):
     return in_s
 
 def generate_dir2save(opt):
+    print(opt.mode)
     dir2save = None
     if (opt.mode == 'train') | (opt.mode == 'SR_train'):
         dir2save = 'TrainedModels/%s/scale_factor=%f,alpha=%d' % (opt.input_name[:-4], opt.scale_factor_init,opt.alpha)
@@ -292,12 +299,12 @@ def generate_dir2save(opt):
         dir2save= "TrainedModels/%s_inpainting/%s" % (opt.input_name[:-4], opt.mask_name[:-4])
         if opt.on_drive!=None:
             dir2save="{}/TrainedModels/{}_inpainting/{}".format(opt.on_drive, opt.input_name[:-4],opt.mask_name[:-4])
-
+    
     elif opt.mode == "inpainting_generate":
         dir2save= "%s/Inpainting/%s_%s" % (opt.out, opt.input_name[:-4], opt.mask_name[:-4])
         if opt.on_drive!=None:
-            dir2save="{}/Inpainting/{}_{}".format(opt.on_drive, opt.input_name[:-4],opt.mask_name[:-4])
-
+            dir2save="{}Input/Inpainting/{}_{}".format(opt.on_drive, opt.input_name[:-4],opt.mask_name[:-4])
+ 
 
     return dir2save
 
@@ -366,8 +373,7 @@ def dilate_mask(mask,opt):
     if opt.mode == "editing":
         element = morphology.disk(radius=20)
     if opt.mode == "inpainting_generate":
-        element = morphology.disk(opt.radius)
-    print(element)
+        element = morphology.disk(float(opt.radius))
     mask = torch2uint8(mask)
     mask = mask[:,:,0]
     mask = morphology.binary_dilation(mask,selem=element)
