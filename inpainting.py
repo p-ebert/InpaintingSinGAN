@@ -103,7 +103,7 @@ if __name__=="__main__":
             plt.imshow(out)
             plt.show()
 
-            out = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)*255
+            #out = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)*255
 
-            cv2.imwrite('%s/%s_start_scale=%d.jpg' % (dir2save,opt.input_name[:-4],opt.inpainting_scale_start), out)
+            cv2.imwrite('%s/%s_start_scale=%d.jpg' % (dir2save,opt.input_name[:-4],opt.inpainting_scale_start), out*255)
             

@@ -21,7 +21,12 @@ def train(opt,Gs,Zs,reals,NoiseAmp):
     #If training for inpainting
     if opt.mode=="inpainting":
         #Importing mask image in space [0,255]
-        mask=img.imread('%s/%s' % (opt.input_dir,opt.mask_name))
+        
+        if opt.on_drive!= None:
+            mask=img.imread('%s/%s/%s' % (opt.on_drive, opt.input_dir,opt.mask_name))
+        else:    
+            mask=img.imread('%s/%s' % (opt.input_dir,opt.mask_name))
+        
         #Convert mask to [O,1] space, 0 is masked out area, 1 everywhere else
         mask=1-(mask/255)
         #Loading mask to torch tensor
