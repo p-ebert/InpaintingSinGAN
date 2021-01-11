@@ -2,30 +2,48 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def mean_colour_rectangular(masked_img, mask):
-    img=masked_img.copy()
-    coordinates=np.where(mask==0)
+def weighted_average_colour(img, mask):
 
-    coordinates[1][0::]
+    #mask = 1-mask/255
 
-    x1=coordinates[0][0]
-    x2=coordinates[0][-1]+3
-    y1=coordinates[1][0]
-    y2=coordinates[1][-1]+3
+    for i in range(mask.shape[0]):
+        for j in range(mask.shape[1]):
+            if mask[i,j,0]<0.1:
 
-    x1=110
-    x2=125
-    y1=70
-    y2=85
+                for x in range(i):
+                    if mask[i-x,j,0]>=0.9:
+                        up_colour=img[i-x,j,:]
+                        up_distance = x
+                        break
 
-    for i in range(x1,x2):
-        for j in range(y1,y2):
-            img[i,j,:]=((y2-j)/(y2-y1))*img[i,y1-1,:]+((j-y1)/(y2-y1))*img[i,y2+1,:]
+                for y in range(mask.shape[0]-i):
+                    if mask[i+y,j,0]>=0.9:
+                        down_colour=img[i-x,j,:]
+                        down_distance = y
+                        break
+
+                for z in range(j):
+                    if mask[i,j-z,0]>=0.9:
+                        right_colour=img[i,j-z,:]
+                        right_distance = z
+
+                        break
+
+                for w in range(mask.shape[1]-j):
+                    if mask[i,j+w,0]>=0.9:
+                        left_colour=img[i,j+w,:]
+                        left_distance = w
+                        break
+
+                total_distance = left_distance + right_distance + up_distance + down_distance
+
+                img[i,j] =  (left_distance/total_distance) * left_colour + (right_distance/total_distance) * right_colour + (up_distance/total_distance) * up_colour + (down_distance/total_distance) * down_colour
+
     return img
 
-def navier_stokes_filler(masked_img, mask):
+def navier_stokes_filler(img, mask):
     #Formating and applying the mask
-    mask=1-mask/255
+    #mask=1-mask/255
     masked_image = img*mask
     masked_image = masked_image.astype(np.uint8)
 
@@ -33,11 +51,11 @@ def navier_stokes_filler(masked_img, mask):
     mask = mask[:,:,0].astype(np.uint8)
     mask = 1-mask
 
-    return cv.inpaint(masked_image, mask, 3, cv.INPAINT_NS)
+    return cv2.inpaint(masked_image, mask, 3, cv.INPAINT_NS)
 
-def telea_filler(masked_img, mask):
+def telea_filler(img, mask):
     #Formating and applying the mask
-    mask=1-mask/255
+    #mask=1-mask/255
     masked_image = img*mask
     masked_image = masked_image.astype(np.uint8)
 
@@ -45,59 +63,45 @@ def telea_filler(masked_img, mask):
     mask = mask[:,:,0].astype(np.uint8)
     mask = 1-mask
 
-    return cv.inpaint(masked_image, mask, 3, cv.INPAINT_TELEA)
+    return cv2.inpaint(masked_image, mask, 3, cv.INPAINT_TELEA)
 
 
-
+#%%
 if __name__=="__main__":
-    x1=110
-    x2=125
-    y1=70
-    y2=85
+    mask = cv2.imread("./Input/Inpainting/mountain_2_mask.jpg")
+    img=cv2.imread("./Input/Inpainting/mountain_2.jpg")
 
-    edges = cv2.imread("./Input/Inpainting/nature_edges_propagated.jpg")
-    mask = cv2.imread("./Input/Inpainting/nature_edges_mask.jpg")
-    img=cv2.imread("./Input/Inpainting/nature_real.jpg")
-    edges
+    mask = 1-mask/255
 
-    coloured=mean_colour_rectangular(img, mask)
+    for i in range(mask.shape[0]):
+        for j in range(mask.shape[1]):
+            if mask[i,j,0]<0.1:
 
-    mask=1-mask/255
+                for x in range(i):
+                    if mask[i-x,j,0]>=0.9:
+                        up_colour=img[i-x,j,:]
+                        up_distance = x
+                        break
 
-    #edges[x2-1:x2,y1:y2,:]
-    edgel=edges[x1:x2,y1:y1+1,:]
-    edger=edges[x1:x2,y2-1:y2,:]
-    edget=edges[x1:x1+1,y1:y2,:]
-    edgeb=edges[x2-1:x2,y1:y2,:]
-    edge_b_bool=(edgeb>=240)[:,:,0]
-    edge_t_bool=(edget>=240)[:,:,0]
-    edge_l_bool=(edgel>=240)[:,:,0]
-    edge_r_bool=(edger>=240)[:,:,0]
+                for y in range(mask.shape[0]-i):
+                    if mask[i+y,j,0]>=0.9:
+                        down_colour=img[i-x,j,:]
+                        down_distance = y
+                        break
 
+                for z in range(j):
+                    if mask[i,j-z,0]>=0.9:
+                        right_colour=img[i,j-z,:]
+                        right_distance = z
 
+                        break
 
-    edge_b_markers=[img[x2,y1+i] for i in range(len(edge_b_bool[0])) if edge_b_bool[0][i]]
-    edge_t_markers=[img[x1-1,y1+i] for i in range(len(edge_t_bool[0])) if edge_t_bool[0][i]]
-    edge_l_markers=[img[x1+i,y1-1] for i in range(len(edge_l_bool[0])) if edge_l_bool[0][i]]
-    edge_r_markers=[img[x1+i,y2] for i in range(len(edge_r_bool[0])) if edge_r_bool[0][i]]
+                for w in range(mask.shape[1]-j):
+                    if mask[i,j+w,0]>=0.9:
+                        left_colour=img[i,j+w,:]
+                        left_distance = w
+                        break
 
-    n_b=len(edge_b_markers)
-    n_t=len(edge_t_markers)
-    n_l=len(edge_l_markers)
-    n_r=len(edge_r_markers)
+                total_distance = left_distance + right_distance + up_distance + down_distance
 
-    mean_marker=(np.mean(np.array(edge_b_markers), axis=0)*len(edge_b_markers)+np.mean(np.array(edge_t_markers), axis=0)*len(edge_t_markers))/(n_b+n_t)
-    mean_marker
-
-    bool=np.tile(False,img.shape)
-    mask_bool=edges[x1:x2,y1:y2,:]>=127
-    bool[x1:x2,y1:y2,:]=mask_bool
-
-    b, g, r=cv2.split(coloured)
-    b[bool[:,:,0]]=255#mean_marker[0]
-    g[bool[:,:,0]]=255#mean_marker[1]
-    r[bool[:,:,0]]=255#mean_marker[2]
-
-    colour_edges=cv2.merge([b, g,r])
-
-    plt.imshow(cv2.cvtColor(colour_edges, cv2.COLOR_BGR2RGB))
+                img[i,j] =  (left_distance/total_distance) * left_colour + (right_distance/total_distance) * right_colour + (up_distance/total_distance) * up_colour + (down_distance/total_distance) * down_colour
