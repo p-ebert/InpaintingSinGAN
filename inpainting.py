@@ -14,8 +14,10 @@ if __name__=="__main__":
     parser.add_argument('--input_name', help='input image name', required=True)
     parser.add_argument('--on_drive', help='using drive or not', default=None)
     parser.add_argument('--mask_name', help='name of mask image', required=True)
+    parser.add_argument('--fill_method', help='method used to fill the masked area', default="navier_stokes")
     parser.add_argument('--inpainting_scale_start', default=1)
     parser.add_argument('--radius', default=7)
+
     opt = parser.parse_args()
     opt.mode = "inpainting_generate"
     opt.inpainting_scale_start=int(opt.inpainting_scale_start)
@@ -49,35 +51,38 @@ if __name__=="__main__":
             else:
                 masked_img = cv2.imread('%s/%s' % (opt.input_dir, opt.input_name))
                 masked_img = cv2.cvtColor(masked_img, cv2.COLOR_BGR2RGB)
-            
+
             #Importing mask
             if opt.on_drive!=None:
                 mask = cv2.imread('%s/%s/%s' % (opt.on_drive, opt.input_dir, opt.mask_name))
             else:
                 mask = cv2.imread('%s/%s' % (opt.input_dir, opt.mask_name))
-            
+
             #Converting to binary mask
             mask=1-mask/255
 
-            coloured_image=colour_fill.mean_colour_rectangular(masked_img, mask)
-            print(coloured_image.shape)
-            print(np.max(coloured_image))
-            plt.imshow(coloured_image)
-            plt.show()
+            if opt.fill_method == "average":
+                coloured_image=colour_fill.mean_colour_rectangular(masked_img, mask)
+
+            elif opt.fill_method == "navier_stokes":
+                coloured_image=colour_fill.navier_stokes_filler(masked_img, mask)
+
+            elif opt.fill_method == "telea":
+                coloured_image=colour_fill.telea_filler(masked_img, mask)
 
             #writing coloured img
             if opt.on_drive!=None:
-                cv2.imwrite("%s/%s_coloured.jpg" % (dir2save, opt.mask_name[:-4]),coloured_image)
+                cv2.imwrite("%s/%s_coloured_%s.jpg" % (dir2save, opt.mask_name[:-4], opt.fill_method),coloured_image)
             else:
-                cv2.imwrite("%s/%s_coloured.jpg" % (dir2save, opt.mask_name[:-4]), coloured_image)
-            
+                cv2.imwrite("%s/%s_coloured_%s.jpg" % (dir2save, opt.mask_name[:-4], opt.fill_method), coloured_image)
+
             #Reading in coloured image
             if opt.on_drive!=None:
-                ref = functions.read_image_dir('%s/%s_coloured.jpg' % (dir2save, opt.mask_name[:-4]), opt)
+                ref = functions.read_image_dir('%s/%s_coloured_%s.jpg' % (dir2save, opt.mask_name[:-4], opt.fill_method), opt)
                 mask = functions.read_image_dir('%s/%s/%s' % (opt.on_drive, opt.input_dir,opt.mask_name), opt)
 
             else:
-                ref = functions.read_image_dir('%s/%s_coloured.jpg' % (dir2save, opt.mask_name[:-4]), opt)
+                ref = functions.read_image_dir('%s/%s_coloured_%s.jpg' % (dir2save, opt.mask_name[:-4], opt.fill_method), opt)
                 mask = functions.read_image_dir('%s/%s' % (opt.input_dir,opt.mask_name), opt)
 
             #ref=cv2.imread('%s/%s' % (opt.input_dir, opt.input_name))
@@ -106,4 +111,3 @@ if __name__=="__main__":
             #out = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)*255
 
             cv2.imwrite('%s/%s_start_scale=%d.jpg' % (dir2save,opt.input_name[:-4],opt.inpainting_scale_start), out*255)
-            

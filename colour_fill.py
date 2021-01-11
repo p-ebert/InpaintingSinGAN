@@ -23,6 +23,32 @@ def mean_colour_rectangular(masked_img, mask):
             img[i,j,:]=((y2-j)/(y2-y1))*img[i,y1-1,:]+((j-y1)/(y2-y1))*img[i,y2+1,:]
     return img
 
+def navier_stokes_filler(masked_img, mask):
+    #Formating and applying the mask
+    mask=1-mask/255
+    masked_image = img*mask
+    masked_image = masked_image.astype(np.uint8)
+
+    #mask = cv.bitwise_not(mask)
+    mask = mask[:,:,0].astype(np.uint8)
+    mask = 1-mask
+
+    return cv.inpaint(masked_image, mask, 3, cv.INPAINT_NS)
+
+def telea_filler(masked_img, mask):
+    #Formating and applying the mask
+    mask=1-mask/255
+    masked_image = img*mask
+    masked_image = masked_image.astype(np.uint8)
+
+    #mask = cv.bitwise_not(mask)
+    mask = mask[:,:,0].astype(np.uint8)
+    mask = 1-mask
+
+    return cv.inpaint(masked_image, mask, 3, cv.INPAINT_TELEA)
+
+
+
 if __name__=="__main__":
     x1=110
     x2=125

@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2 as cv
 
-
 img = cv.imread("./Input/Inpainting/nature_edges.jpg")
 img.shape
 img=np.array(img)
