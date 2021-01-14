@@ -25,19 +25,19 @@ def weighted_average_colour(img, mask):
                 for z in range(j):
                     if mask[i,j-z,0]>=0.9:
                         right_colour=img[i,j-z,:]
-                        right_distance = z
+                        right_distance = 1/z
 
                         break
 
                 for w in range(mask.shape[1]-j):
                     if mask[i,j+w,0]>=0.9:
                         left_colour=img[i,j+w,:]
-                        left_distance = w
+                        left_distance = 1/w
                         break
 
-                total_distance = left_distance + right_distance + up_distance + down_distance
+                total_distance = w * z * x * y /(x*y*w+y*w*z+x*w*z+x*y*z) #+ up_distance + down_distance
 
-                img[i,j] =  (left_distance/total_distance) * left_colour + (right_distance/total_distance) * right_colour + (up_distance/total_distance) * up_colour + (down_distance/total_distance) * down_colour
+                img[i,j] =  ((1/w)*total_distance) * left_colour + ((1/z)*total_distance)* right_colour + ((1/x)*total_distance) * up_colour +((1/y)*total_distance) * down_colour
 
     return img
 
@@ -68,8 +68,8 @@ def telea_filler(img, mask):
 
 #%%
 if __name__=="__main__":
-    mask = cv2.imread("./Input/Inpainting/mountain_2_mask.jpg")
-    img=cv2.imread("./Input/Inpainting/mountain_2.jpg")
+    mask = cv2.imread("./Input/Inpainting/image_5M_mask.jpeg")
+    img=cv2.imread("./Input/Inpainting/image_5M.jpeg")
 
     mask = 1-mask/255
 
@@ -92,16 +92,20 @@ if __name__=="__main__":
                 for z in range(j):
                     if mask[i,j-z,0]>=0.9:
                         right_colour=img[i,j-z,:]
-                        right_distance = z
+                        right_distance = 1/z
 
                         break
 
                 for w in range(mask.shape[1]-j):
                     if mask[i,j+w,0]>=0.9:
                         left_colour=img[i,j+w,:]
-                        left_distance = w
+                        left_distance = 1/w
                         break
 
-                total_distance = left_distance + right_distance + up_distance + down_distance
+                total_distance = w * z * x * y /(x*y*w+y*w*z+x*w*z+x*y*z) #+ up_distance + down_distance
 
-                img[i,j] =  (left_distance/total_distance) * left_colour + (right_distance/total_distance) * right_colour + (up_distance/total_distance) * up_colour + (down_distance/total_distance) * down_colour
+                img[i,j] =  ((1/w)*total_distance) * left_colour + ((1/z)*total_distance)* right_colour + ((1/x)*total_distance) * up_colour +((1/y)*total_distance) * down_colour
+
+
+
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))

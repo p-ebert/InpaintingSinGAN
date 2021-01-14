@@ -3,18 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2 as cv
 
-img = cv.imread("./Input/Inpainting/mountain_1.jpeg")
-mask = cv.imread("./Input/Inpainting/mountain_1_mask.jpeg")
-mask = 1 - mask/255
-masked_image = img * mask
-masked_image = masked_image.astype(np.uint8)
-
-plt.imshow(1-mask)
-plt.show()
-cv.imwrite("./Input/Inpainting/mountain_2.jpg", masked_image)
-cv.imwrite("./Input/Inpainting/mountain_2_mask.jpg", (1-mask)*255)
-#%%
-
+img = cv.imread("./Input/Inpainting/nature_edges.jpg")
 img.shape
 img=np.array(img)
 x1=110

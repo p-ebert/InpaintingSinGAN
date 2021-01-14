@@ -16,7 +16,7 @@ if __name__=="__main__":
     parser.add_argument('--mask_name', help='name of mask image', required=True)
     parser.add_argument('--fill_method', help='method used to fill the masked area', default="navier_stokes")
     parser.add_argument('--inpainting_scale_start', default=1)
-    parser.add_argument('--radius', default=7)
+    parser.add_argument('--radius', default=15)
 
     opt = parser.parse_args()
     opt.mode = "inpainting_generate"
@@ -39,6 +39,9 @@ if __name__=="__main__":
             pass
 
         real = functions.read_image(opt)
+        
+        if opt.max_size < 251:
+            a = imresize_to_shape(real, [real.shape[2], real.shape[3]], opt)
         real = functions.adjust_scales2image(real, opt)
         Gs, Zs, reals, NoiseAmp = functions.load_trained_pyramid(opt)
         if (opt.inpainting_scale_start < 1) | (opt.inpainting_scale_start > (len(Gs)-1)):
@@ -60,11 +63,11 @@ if __name__=="__main__":
 
             #Converting to binary mask
             mask=1-mask/255
-
+         
             if opt.fill_method == "average":
-                coloured_image=colour_fill.mean_colour_rectangular(masked_img, mask)
-
+                coloured_image=colour_fill.weighted_average_colour(masked_img, mask)
             elif opt.fill_method == "navier_stokes":
+                #img1 = colour_fill.weighted_average_colour(masked_img, mask)
                 coloured_image=colour_fill.navier_stokes_filler(masked_img, mask)
 
             elif opt.fill_method == "telea":
@@ -102,11 +105,13 @@ if __name__=="__main__":
             in_s = in_s[:, :, :reals[n].shape[2], :reals[n].shape[3]]
             out = SinGAN_generate(Gs[n:], Zs[n:], reals, NoiseAmp[n:], opt, in_s, n=n, num_samples=1)
             out = (1-mask)*real+mask*out
+            
+            if opt.max_size < 251:
+                out = imresize_to_shape(out, [a.shape[2], a.shape[3]], opt)
+                mask = imresize_to_shape(mask, [a.shape[2], a.shape[3]], opt)
+                out = (1-mask)*a+mask*out
 
             out = functions.convert_image_np(out.detach())
-
-            plt.imshow(out)
-            plt.show()
 
             #out = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)*255
 
