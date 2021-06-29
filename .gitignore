@@ -5,3 +5,5 @@ __pycache__/
 .idea
 singan_env/
 SINGANenv/
+.ipynb_checkpoints
+.vscode

@@ -16,6 +16,8 @@ To actually inpaint: run inpainting.py
 --inpainting_scale_start (default=1)
 --radius (default=7)
 
+Further information can be found in our report [here](FPR_Boudin_Ebert.pdf).
+
 *[Project](https://tamarott.github.io/SinGAN.htm) | [Arxiv](https://arxiv.org/pdf/1905.01164.pdf) | [CVF](http://openaccess.thecvf.com/content_ICCV_2019/papers/Shaham_SinGAN_Learning_a_Generative_Model_From_a_Single_Natural_Image_ICCV_2019_paper.pdf)
 
 
