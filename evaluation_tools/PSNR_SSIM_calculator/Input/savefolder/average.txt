@@ -1,0 +1,2 @@
+average (PSNR,SSIM)
+epoch_1 : 27.255874141487617 is average PSNR, 0.9477832673840357 is average SSIM
